@@ -209,7 +209,7 @@ What it does: collects every session that worked on the repository (subagents in
 
 Three honest frictions:
 
-- **It refuses rather than guesses.** If a part of the run record is missing it writes no bundle and names the flag to add. A Claude Code log, for one, carries neither the system prompt nor the effort, which is why both flags appear above — `--effort` takes the level you actually ran at (`low`, `medium`, `high`), or `default` for the harness's own.
+- **It refuses rather than guesses.** If a part of the run record is missing it writes no bundle and names the flag to add. A Claude Code log, for one, carries neither the system prompt nor the effort, which is why both flags appear above — `--effort` takes the level you actually ran at (`low`, `medium`, `high`, `xhigh`, `max`), or `default` for the harness's own.
 - **Provider and model are never `auto`.** `--provider` is a plain lowercase name — `anthropic`, `openai`, `google`, `xai`, `deepseek`, `mistral`, `openrouter` — and `--model` is the id the provider returns. If the id is an alias with no published price, `thinking_priced` fails the gate; pick the model by name in your harness instead of letting it auto-select.
 - **MCP servers have to be named.** If the session log does not show them, add `--mcp <name>=<url>` per server, or say there were none with `--mcp none`. It writes no bundle until you do.
 
@@ -233,7 +233,7 @@ Finally, if your tool keeps no session file you can upload at all: the rules let
 
 ## 6. Checking before you submit
 
-The kit runs the site's own pre-submit checks on your machine. It sends nothing to make.fun and spends no entry from your daily limit, so there is no reason not to run it as often as you like:
+The kit runs the site's own pre-submit checks on your machine. It works offline — the only check that touches the network is a Roblox play-link lookup, which most bounties do not have — and it spends no entry from your daily limit, so there is no reason not to run it as often as you like:
 
 ```sh
 node cli/makefun.mjs check --kit . --repo ../my-entry --commit HEAD --transcripts transcripts.tar.gz
