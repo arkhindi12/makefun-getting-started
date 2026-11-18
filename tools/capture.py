@@ -61,7 +61,13 @@ def wait_for_readme(page, timeout_s: float) -> None:
 
 
 def capture(page, max_pixels: int) -> tuple[bytes, int, int]:
-    """Take a full-page PNG whose width*height stays under max_pixels."""
+    """Capture the page at normal scale, cropping its height to the pixel cap.
+
+    The whole page is taken in one full-page shot. When that is over the pixel
+    cap, the image is cropped from the top to exactly what fits rather than
+    scaled down: the top of the image is what the board and the Feed show, and a
+    downscaled capture would make the guide unreadable.
+    """
     from PIL import Image
 
     shot = page.screenshot(full_page=True, animations="disabled", caret="hide", scale="css")
@@ -70,27 +76,12 @@ def capture(page, max_pixels: int) -> tuple[bytes, int, int]:
     if width * height <= max_pixels:
         return shot, width, height
 
-    # Too tall: re-capture a clipped region instead of downscaling, so the top keeps
-    # normal scale and stays readable. Keep the top of the page, which is the part
-    # the board and the Feed show.
-    keep = max(1, max_pixels // max(1, width))
-    page_height = page.evaluate("() => document.documentElement.scrollHeight")
-    clip_h = min(keep, int(page_height))
-    shot = page.screenshot(
-        clip={"x": 0, "y": 0, "width": width, "height": clip_h},
-        animations="disabled",
-        caret="hide",
-        scale="css",
-    )
-    img = Image.open(io.BytesIO(shot))
+    keep = max(1, (max_pixels - 1) // max(1, width))  # strictly under the cap
+    img = img.crop((0, 0, width, keep))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
     width, height = img.size
-    if width * height > max_pixels:  # belt and braces: crop the bytes we already have
-        img = img.crop((0, 0, width, max(1, max_pixels // width)))
-        buf = io.BytesIO()
-        img.save(buf, format="PNG", optimize=True)
-        shot = buf.getvalue()
-        width, height = img.size
-    return shot, width, height
+    return buf.getvalue(), width, height
 
 
 def main(argv: list[str]) -> int:
